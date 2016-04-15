@@ -15,6 +15,7 @@ class Configuration(object):
         self.fields = settings.get("fields", {})
         self.pretty_urls = settings.get("pretty_urls", None) == 'True' and True or False
         self.static_folders = settings.get("static_folders", [])
+        self.s3bucket = settings.get("s3bucket", None)
 
     @property
     def templates_abs_path(self):
