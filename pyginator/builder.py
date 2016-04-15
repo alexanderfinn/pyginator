@@ -33,7 +33,7 @@ class Builder(object):
                     header.urls = (f,)
                 for url in header.urls:                    
                     target = self.get_target_file(url)
-                    target.write(text)
+                    target.write(text.encode('utf-8'))
                     target.close()
         self.copy_static()
 
@@ -46,7 +46,7 @@ class Builder(object):
         header, html = self.read_file(file)
         context = header.fields
         context.update(self.configuration.fields)
-        body = Template(html).render(**context)
+        body = Template(html.decode('utf-8')).render(**context)
         if not header.template:
             return body, header
         else:
@@ -70,14 +70,11 @@ class Builder(object):
         return Header(header), html
 
     def get_target_file(self, url):
+        target = os.path.join(self.configuration.target_path, url)
         if self.configuration.pretty_urls and not url.endswith('.html'):
-            target = os.path.join(self.configuration.target_path, url, 'index.html')
-        else:
-            target = os.path.join(self.configuration.target_path, url)
+            target = os.path.join(target, 'index.html')
         try:
             os.makedirs(os.path.dirname(target))
         except:
             pass
         return open(target, 'w')
-
-

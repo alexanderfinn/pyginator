@@ -9,5 +9,5 @@ setup(
     author_email='finnam@gmail.com',
     url='https://github.com/alexanderfinn/pyginator',
     packages=['pyginator',],
-    install_requires=["Jinja2",],
+    install_requires=["Jinja2", "boto3"],
 )
