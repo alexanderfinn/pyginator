@@ -1,5 +1,7 @@
 import os
 import mimetypes
+import pickle
+import hashlib
 import boto3
 
 
@@ -17,6 +19,13 @@ class Deployer(object):
     """
     def __init__(self, configuration):
         self.configuration = configuration
+        self.hashes = {}
+        try:
+            data = open(os.path.join(configuration.base_path, 'pyginator.hash'),'rb')
+            self.hashes = pickle.load(data)
+            data.close()
+        except:
+            pass
 
     def deploy(self):
         if not self.configuration.s3bucket:
@@ -30,7 +39,17 @@ class Deployer(object):
                     name = f
                 else:
                     name = root[len(self.configuration.target_path)+1:] + '/' + f
-                print "Deploying object: " + name
-                data = open(os.path.join(root, f), 'rb')
-                s3.Bucket(self.configuration.s3bucket).put_object(Key=name, Body=data, ContentType=mimetypes.guess_type(f)[0])
-                data.close()
+                path = os.path.join(root, f)
+                hash = self.get_file_hash(path)
+                if self.hashes.get(path, None) != hash:
+                    print "Deploying object: " + name
+                    data = open(path, 'rb')
+                    s3.Bucket(self.configuration.s3bucket).put_object(Key=name, Body=data, ContentType=mimetypes.guess_type(f)[0])
+                    data.close()
+                    self.hashes[path] = hash
+        hf = open(os.path.join(self.configuration.base_path, 'pyginator.hash'),'wb')
+        pickle.dump(self.hashes, hf)
+        hf.close()
+
+    def get_file_hash(self, path):
+        return hashlib.md5(open(path, 'rb').read()).hexdigest()

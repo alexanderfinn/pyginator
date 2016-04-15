@@ -55,18 +55,11 @@ class Builder(object):
             return template.render(**context), header
 
     def read_file(self, file):
+        print "Reading file " + file
         f = open(os.path.join(self.configuration.sources_abs_path, file), 'r')
-        header = ''
-        html = ''
         is_header = True
-        for line in f:
-            if is_header:
-                if line == self.HEADER_SEPARATOR:
-                    is_header = False
-                else:
-                    header = header + line
-            else:
-                html = html + line
+        fc = f.read()
+        header, html = fc.split('===')
         return Header(header), html
 
     def get_target_file(self, url):
