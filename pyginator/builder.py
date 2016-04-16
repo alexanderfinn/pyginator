@@ -1,6 +1,7 @@
 import os
 import json
 import shutil
+import markdown
 from jinja2 import FileSystemLoader, Environment, Template
 
 
@@ -50,6 +51,8 @@ class Builder(object):
         context.update(self.get_data(header))
         context.update(self.configuration.fields)
         body = Template(html.decode('utf-8')).render(**context)
+        if file.endswith('.md'):
+            body = markdown.markdown(body)
         if not header.template:
             return body, header
         else:
