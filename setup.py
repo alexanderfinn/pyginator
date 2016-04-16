@@ -10,4 +10,7 @@ setup(
     url='https://github.com/alexanderfinn/pyginator',
     packages=['pyginator',],
     install_requires=["Jinja2", "boto3"],
+    entry_points = {
+        'console_scripts': ['pyginator=pyginator.pyginator:command_line'],
+    },
 )

@@ -8,6 +8,10 @@ from builder import Builder
 from deployer import Deployer
 
 
+def command_line():
+    main(sys.argv[1:])
+
+
 def main(sysargs):
     parser = argparse.ArgumentParser(description='pyginate - static web site generator')
     parser.add_argument('action', help='Action to perform', choices=['build', 'deploy'])
