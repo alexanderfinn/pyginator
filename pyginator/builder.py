@@ -11,6 +11,7 @@ class Header(object):
         self.fields = data.get("fields", {})
         self.template = data.get("template", None)
         self.urls = data.get("urls", None)
+        self.data_files = data.get("data", [])
 
 
 class Builder(object):
@@ -20,6 +21,7 @@ class Builder(object):
     def __init__(self, configuration):
         self.configuration = configuration
         self.jinja_env = Environment(loader=FileSystemLoader(self.configuration.templates_abs_path))
+        self.extra_data = {}
 
     def build(self):
         try:
@@ -45,6 +47,7 @@ class Builder(object):
     def render(self, file):
         header, html = self.read_file(file)
         context = header.fields
+        context.update(self.get_data(header))
         context.update(self.configuration.fields)
         body = Template(html.decode('utf-8')).render(**context)
         if not header.template:
@@ -53,6 +56,22 @@ class Builder(object):
             context.update({'body': body})
             template = self.jinja_env.get_template(header.template)
             return template.render(**context), header
+
+    def get_data(self, header):
+        result = {}
+        for df in header.data_files:
+            if not df in self.extra_data:
+                self.load_extra_data(df)
+            result[df] = self.extra_data.get(df, {})
+        return result
+
+    def load_extra_data(self, df):
+        f = open(os.path.join(self.configuration.data_path, df), 'r')
+        try:
+            self.extra_data[df] = json.loads(f.read())
+        except:
+            print "Failed to load extra data %s" % df
+        f.close()
 
     def read_file(self, file):
         print "Reading file " + file

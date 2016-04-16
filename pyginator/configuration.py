@@ -12,6 +12,7 @@ class Configuration(object):
         self.templates_dir = settings.get("templates_dir", "templates")
         self.source_dir = settings.get("source_dir", "src")
         self.target_dir = settings.get("target_dir", "target")
+        self.data_dir = settings.get("data_dir", "data")
         self.fields = settings.get("fields", {})
         self.pretty_urls = settings.get("pretty_urls", None) == 'True' and True or False
         self.static_folders = settings.get("static_folders", [])
@@ -28,4 +29,10 @@ class Configuration(object):
     @property
     def target_path(self):
         return os.path.join(self.base_path, self.target_dir)
+
+    @property
+    def data_path(self):
+        return os.path.join(self.base_path, self.data_dir)
+    
+
     
