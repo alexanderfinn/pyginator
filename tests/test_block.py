@@ -1,5 +1,5 @@
 import unittest
-from pyginator.builder import Block
+from pyginator.pages import Block
 
 
 class BlockTest(unittest.TestCase):

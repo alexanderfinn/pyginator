@@ -1,5 +1,5 @@
 import unittest
-from pyginator.builder import Page, RenderingException
+from pyginator.pages import Page, RenderingException
 
 
 class PageTest(unittest.TestCase):
