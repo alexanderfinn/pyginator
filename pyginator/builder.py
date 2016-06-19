@@ -5,6 +5,9 @@ import markdown
 from jinja2 import FileSystemLoader, Environment, Template
 
 
+class RenderingException(Exception):
+    pass
+
 class Header(object):
 
     def __init__(self, header):
@@ -12,7 +15,6 @@ class Header(object):
         self.fields = data.get("fields", {})
         self.template = data.get("template", None)
         self.urls = data.get("urls", None)
-        self.data_files = data.get("data", [])
 
 
 class Block(object):
@@ -22,11 +24,13 @@ class Block(object):
         self.block_type = 'html'
         lines = text.splitlines(False)
         has_header = False
-        if lines[0].startswith('NAME:'):
+        if lines[0].strip() == '':
+            lines = lines[1:]
+        if lines[0].strip().startswith('NAME:'):
             self.name = lines[0].split(':')[1]
             lines = lines[1:]
             has_header = True
-        if lines[0].startswith('TYPE:'):
+        if lines[0].strip().startswith('TYPE:'):
             self.block_type = lines[0].split(':')[1].upper()
             lines = lines[1:]
             has_header = True
@@ -43,14 +47,65 @@ class Block(object):
         return result
 
 
+class Page(object):
+
+    BLOCK_SEPARATOR = '==='
+
+    def __init__(self, name, text):
+        blocks = self._get_blocks(text)
+        self.name = name
+        self.header = Header(blocks[0])
+        self.blocks = [Block(b) for b in blocks[1:]]
+        block_names = []
+        for b in self.blocks:
+            if b.name in block_names:
+                raise RenderingException(
+                    "More then one block with the same name '%s' for page %s" % 
+                    (b.name, name))
+            block_names.append(b.name)
+
+    @classmethod
+    def _get_blocks(cls, text):
+        lines = text.splitlines(False)
+        block = ''
+        blocks = []
+        for l in lines:
+            if l.strip() == cls.BLOCK_SEPARATOR:
+                blocks.append(block)
+                block = ''
+            else:
+                block = '\n'.join((block, l))
+        if block.strip():
+            blocks.append(block)
+        return blocks
+
+    def render(self, global_context):
+        rendered = {}
+        context = {}
+        context.update(global_context)
+        context.update(self.header.fields)
+        for block in blocks:
+            rendered[block.name] = block.render(context)
+        if not self.header.template:
+            return rendered.get('body', '')
+        else:
+            context.update(rendered)
+            template = self.jinja_env.get_template(header.template)
+            return template.render(**context)
+
+    @property
+    def urls(self):
+        urls = self.header.urls or (self.name,)
+
+
 class Builder(object):
 
-    HEADER_SEPARATOR = '\n===\n'
 
     def __init__(self, configuration):
         self.configuration = configuration
         self.jinja_env = Environment(loader=FileSystemLoader(self.configuration.templates_abs_path))
         self.extra_data = {}
+        self.global_context = self.configuration.fields
 
     def build(self):
         try:
@@ -59,13 +114,14 @@ class Builder(object):
             pass
         for f in os.listdir(self.configuration.sources_abs_path):
             if f.endswith('.html'):
-                text, header = self.render(f)
-                if not header.urls:
-                    header.urls = (f,)
-                for url in header.urls:                    
-                    target = self.get_target_file(url)
-                    target.write(text.encode('utf-8'))
-                    target.close()
+                try:
+                    page = self.render(f)
+                    for url in page.urls:
+                        target = self.get_target_file(url)
+                        target.write(text.encode('utf-8'))
+                        target.close()
+                except RenderingException, e:
+                    print "Failed to render page %s with exception: %s" % (f, e)
         self.copy_static()
 
     def copy_static(self):
@@ -74,45 +130,11 @@ class Builder(object):
 
 
     def render(self, file):
-        header, blocks = self.read_file(file)
-        rendered = {}
-        context = self.get_context(header)
-        for block in blocks:
-            rendered[block.name] = block.render(context)
-        if not header.template:
-            return rendered.get('body', ''), header
-        else:
-            context.update(rendered)
-            template = self.jinja_env.get_template(header.template)
-            return template.render(**context), header
-
-    def get_context(self, header):
-        context = header.fields
-        context.update(self.get_data(header))
-        context.update(self.configuration.fields)
-        return context
-
-    def get_data(self, header):
-        result = {}
-        for df in header.data_files:
-            if not df in self.extra_data:
-                self.load_extra_data(df)
-            result[df] = self.extra_data.get(df, {})
-        return result
-
-    def load_extra_data(self, df):
-        f = open(os.path.join(self.configuration.data_path, df), 'r')
-        try:
-            self.extra_data[df] = json.loads(f.read())
-        except:
-            print "Failed to load extra data %s" % df
-        f.close()
-
-    def read_file(self, file):
         print "Reading file " + file
         f = open(os.path.join(self.configuration.sources_abs_path, file), 'r')
-        is_header = True
-        fc = f.read()
+        return Page(file, f.read())
+
+    def read_file(self, file):
         blocks = fc.split(HEADER_SEPARATOR)
         return Header(blocks[0]), [Block(b) for b in blocks[1:]]
 
