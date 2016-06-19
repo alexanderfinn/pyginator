@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='pyginator',
-    version='0.2.0',
+    version='0.3.0',
     description='pyginator - static web site generator',
     author='Alexander Finn',
     author_email='finnam@gmail.com',
