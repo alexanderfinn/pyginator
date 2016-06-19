@@ -14,9 +14,10 @@ def command_line():
 
 def main(sysargs):
     parser = argparse.ArgumentParser(description='pyginate - static web site generator')
-    parser.add_argument('action', help='Action to perform', choices=['build', 'deploy'])
+    parser.add_argument('action', help='Action to perform', choices=['build', 'deploy', 'process'])
     parser.add_argument('-d', '--dir', help='Web site base directory', default=os.getcwd())
     parser.add_argument('-c', '--config_file_name', help='Configuration file name', default='pyginator.json')
+    parser.add_argument('-s', '--processing_script', help='Procesing script to apply', default='')
     args = parser.parse_args()
     conf_file = os.path.join(args.dir, args.config_file_name)
     configuration = Configuration(args.dir, json.load(open(conf_file)))
@@ -26,6 +27,9 @@ def main(sysargs):
     elif args.action == 'deploy':
         deployer = Deployer(configuration)
         deployer.deploy()
+    elif args.action == 'process':
+        processor = Processor(configuration, args.processing_script)
+        processor.process()
 
 
 if __name__ == '__main__':

@@ -100,7 +100,6 @@ class Page(object):
 
 class Builder(object):
 
-
     def __init__(self, configuration):
         self.configuration = configuration
         self.jinja_env = Environment(loader=FileSystemLoader(self.configuration.templates_abs_path))

@@ -17,6 +17,7 @@ class Configuration(object):
         self.pretty_urls = settings.get("pretty_urls", None) == 'True' and True or False
         self.static_folders = settings.get("static_folders", [])
         self.s3bucket = settings.get("s3bucket", None)
+        self.scripts_dir = settings.get("scripts_dir", "scripts")
 
     @property
     def templates_abs_path(self):
@@ -33,6 +34,11 @@ class Configuration(object):
     @property
     def data_path(self):
         return os.path.join(self.base_path, self.data_dir)
+
+    @property
+    def scripts_abs_path(self):
+        return os.path.join(self.base_path, self.scripts_dir)
+    
     
 
     
