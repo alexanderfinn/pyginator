@@ -14,22 +14,32 @@ class Header(object):
         self.template = data.get("template", None)
         self.urls = data.get("urls", None)
 
+    def get_text(self):
+        result = {}
+        if self.fields:
+            result['fields'] = self.fields
+        if self.template:
+            result['template'] = self.template
+        if self.urls:
+            result['urls'] = self.urls
+        return json.dumps(result)
+
 
 class Block(object):
 
     def __init__(self, text):
         self.name = 'body'
-        self.block_type = 'html'
+        self.block_type = 'HTML'
         lines = text.splitlines(False)
         has_header = False
         if lines[0].strip() == '':
             lines = lines[1:]
         if lines[0].strip().startswith('NAME:'):
-            self.name = lines[0].split(':')[1]
+            self.name = lines[0].split(':')[1].strip()
             lines = lines[1:]
             has_header = True
         if lines[0].strip().startswith('TYPE:'):
-            self.block_type = lines[0].split(':')[1].upper()
+            self.block_type = lines[0].split(':')[1].strip().upper()
             lines = lines[1:]
             has_header = True
 
@@ -44,12 +54,19 @@ class Block(object):
             result = markdown.markdown(result)
         return result
 
+    def get_text(self):
+        return '\n'.join(('NAME:%s' % self.name, 'TYPE:%s' % self.block_type, self.text))
+
 
 class Page(object):
 
     BLOCK_SEPARATOR = '==='
 
-    def __init__(self, name, text):
+    def __init__(self, name, text, templates_dir=None):
+        if templates_dir:
+            self.jinja_env = Environment(loader=FileSystemLoader(templates_dir))
+        else:
+            self.jinja_env = None
         blocks = self._get_blocks(text)
         self.name = name
         self.header = Header(blocks[0])
@@ -84,7 +101,7 @@ class Page(object):
         context.update(self.header.fields)
         for block in blocks:
             rendered[block.name] = block.render(context)
-        if not self.header.template:
+        if not self.header.template or not self.jinja_env:
             return rendered.get('body', '')
         else:
             context.update(rendered)
@@ -94,3 +111,6 @@ class Page(object):
     @property
     def urls(self):
         urls = self.header.urls or (self.name,)
+
+    def get_text(self):
+        return ('\n%s\n' % self.BLOCK_SEPARATOR).join([self.header.get_text()] + [b.get_text() for b in self.blocks])

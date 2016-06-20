@@ -1,4 +1,5 @@
 import os
+from output import Console
 
 
 class Configuration(object):
@@ -18,6 +19,7 @@ class Configuration(object):
         self.static_folders = settings.get("static_folders", [])
         self.s3bucket = settings.get("s3bucket", None)
         self.scripts_dir = settings.get("scripts_dir", "scripts")
+        self.console = Console()
 
     @property
     def templates_abs_path(self):

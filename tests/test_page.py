@@ -68,3 +68,14 @@ class PageTest(unittest.TestCase):
         except RenderingException, e:
             pass
 
+    def test_get_text(self):
+        text = '''{"urls": ["index.html"]}
+        ===
+        Text Block
+        ===
+        NAME:a
+        Another block
+        '''
+        expected_text = '{"urls": ["index.html"]}\n===\nNAME:body\nTYPE:HTML\n\n        Text Block\n===\nNAME:a\nTYPE:HTML\n        Another block\n        '
+        page = Page('test', text)
+        self.assertEqual(page.get_text(), expected_text)

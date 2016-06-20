@@ -7,7 +7,6 @@ class Builder(object):
 
     def __init__(self, configuration):
         self.configuration = configuration
-        self.jinja_env = Environment(loader=FileSystemLoader(self.configuration.templates_abs_path))
         self.extra_data = {}
         self.global_context = self.configuration.fields
 
@@ -16,27 +15,33 @@ class Builder(object):
             shutil.rmtree(self.configuration.target_path)
         except:
             pass
+        for source in self.source_files:
+            try:
+                page = self.get_page(source)
+                for url in page.urls:
+                    target = self.get_target_file(url)
+                    target.write(text.encode('utf-8'))
+                    target.close()
+            except RenderingException, e:
+                print "Failed to render page %s with exception: %s" % (f, e)
+        self.copy_static()
+
+    def get_page(self, source):
+        f = open(source, 'r')
+        page = Page(os.path.split(source)[1], f.read(), templates_dir=self.configuration.templates_abs_path)
+        f.close()
+        return page
+
+
+    @property
+    def source_files(self):
         for f in os.listdir(self.configuration.sources_abs_path):
             if f.endswith('.html'):
-                try:
-                    page = self.render(f)
-                    for url in page.urls:
-                        target = self.get_target_file(url)
-                        target.write(text.encode('utf-8'))
-                        target.close()
-                except RenderingException, e:
-                    print "Failed to render page %s with exception: %s" % (f, e)
-        self.copy_static()
+                yield os.path.join(self.configuration.sources_abs_path, f)
 
     def copy_static(self):
         for folder in self.configuration.static_folders:
             shutil.copytree(os.path.join(self.configuration.base_path, folder), os.path.join(self.configuration.target_path, folder))
-
-
-    def render(self, file):
-        print "Reading file " + file
-        f = open(os.path.join(self.configuration.sources_abs_path, file), 'r')
-        return Page(file, f.read())
 
     def get_target_file(self, url):
         target = os.path.join(self.configuration.target_path, url)
