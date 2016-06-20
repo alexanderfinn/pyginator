@@ -6,6 +6,7 @@ import json
 from configuration import Configuration
 from builder import Builder
 from deployer import Deployer
+from processor import Processor
 
 
 def command_line():
@@ -18,7 +19,7 @@ def main(sysargs):
     parser.add_argument('-d', '--dir', help='Web site base directory', default=os.getcwd())
     parser.add_argument('-c', '--config_file_name', help='Configuration file name', default='pyginator.json')
     parser.add_argument('-s', '--processing_script', help='Procesing script to apply', default='')
-    parser.add_argument('-d', '--dry_run', action='store_true', help='Do not apply any changes, just report')
+    parser.add_argument('-dr', '--dry_run', action='store_true', help='Do not apply any changes, just report')
     args = parser.parse_args()
     conf_file = os.path.join(args.dir, args.config_file_name)
     configuration = Configuration(args.dir, json.load(open(conf_file)))

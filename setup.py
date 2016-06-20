@@ -3,7 +3,7 @@ from setuptools import setup
 
 setup(
     name='pyginator',
-    version='0.4.0',
+    version='0.4.1',
     description='pyginator - static web site generator',
     author='Alexander Finn',
     author_email='finnam@gmail.com',
@@ -11,6 +11,6 @@ setup(
     packages=['pyginator',],
     install_requires=["Jinja2", "boto3", "markdown"],
     entry_points = {
-        'console_scripts': ['pyginator=pyginator.pyginator:command_line'],
+        'console_scripts': ['pyginator=pyginator.pyginator:command_line', 'pgn=pyginator.pyginator:command_line'],
     },
 )

@@ -49,13 +49,16 @@ class Block(object):
             self.text = text
 
     def render(self, context):
-        result = Template(self.text).render(**context)
+        result = Template(self.text.decode('utf-8')).render(**context)
         if self.block_type == 'MD':
             result = markdown.markdown(result)
         return result
 
     def get_text(self):
-        return '\n'.join(('NAME:%s' % self.name, 'TYPE:%s' % self.block_type, self.text))
+        if self.name != 'body':    
+            return '\n'.join(('NAME:%s' % self.name, 'TYPE:%s' % self.block_type, self.text))
+        else:
+            return self.text
 
 
 class Page(object):
@@ -99,18 +102,25 @@ class Page(object):
         context = {}
         context.update(global_context)
         context.update(self.header.fields)
-        for block in blocks:
+        for block in self.blocks:
             rendered[block.name] = block.render(context)
         if not self.header.template or not self.jinja_env:
             return rendered.get('body', '')
         else:
             context.update(rendered)
-            template = self.jinja_env.get_template(header.template)
+            template = self.jinja_env.get_template(self.header.template)
             return template.render(**context)
 
     @property
     def urls(self):
-        urls = self.header.urls or (self.name,)
+        return self.header.urls or (self.name,)
 
     def get_text(self):
-        return ('\n%s\n' % self.BLOCK_SEPARATOR).join([self.header.get_text()] + [b.get_text() for b in self.blocks])
+        return ('\n%s\n' % self.BLOCK_SEPARATOR).join([self.header.get_text()] + 
+            [b.get_text() for b in self.blocks])
+
+    def insert_block(self, position, text):
+        self.blocks.insert(position, Block(text))
+
+    def remove_block(self, position):
+        self.blocks = self.blocks[:position] + self.blocks[position+1:]

@@ -1,6 +1,6 @@
 import os
 import shutil
-from pages import Page
+from pages import Page, RenderingException
 
 
 class Builder(object):
@@ -17,10 +17,11 @@ class Builder(object):
             pass
         for source in self.source_files:
             try:
+                self.configuration.console.out("Building file %s" % source)
                 page = self.get_page(source)
                 for url in page.urls:
                     target = self.get_target_file(url)
-                    target.write(text.encode('utf-8'))
+                    target.write(page.render(self.global_context).encode('utf-8'))
                     target.close()
             except RenderingException, e:
                 print "Failed to render page %s with exception: %s" % (f, e)
