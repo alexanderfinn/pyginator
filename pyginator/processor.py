@@ -22,7 +22,7 @@ class Processor(object):
         for source in builder.source_files:
             page = builder.get_page(source)
             mod_page = self.script.process(source, page)
-            if mod_page:
+            if mod_page and not self.configuration.dry_run:
                 f = open(source, 'w')
                 f.write(page.get_text())
                 f.close()

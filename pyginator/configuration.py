@@ -20,6 +20,7 @@ class Configuration(object):
         self.s3bucket = settings.get("s3bucket", None)
         self.scripts_dir = settings.get("scripts_dir", "scripts")
         self.console = Console()
+        self.dry_run = False
 
     @property
     def templates_abs_path(self):
