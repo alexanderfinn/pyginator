@@ -9,11 +9,7 @@ from deployer import Deployer
 from processor import Processor
 
 
-def command_line():
-    main(sys.argv[1:])
-
-
-def main(sysargs):
+def main():
     parser = argparse.ArgumentParser(description='pyginate - static web site generator')
     parser.add_argument('action', help='Action to perform', choices=['build', 'deploy', 'process'])
     parser.add_argument('-d', '--dir', help='Web site base directory', default=os.getcwd())
@@ -37,4 +33,4 @@ def main(sysargs):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1:])
+    main()

@@ -37,7 +37,7 @@ class Builder(object):
     @property
     def source_files(self):
         for f in os.listdir(self.configuration.sources_abs_path):
-            if f.endswith('.html'):
+            if f.endswith('.html') || f.endswith('.txt'):
                 yield os.path.join(self.configuration.sources_abs_path, f)
 
     def copy_static(self):

@@ -35,6 +35,8 @@ class Deployer(object):
         s3 = boto3.resource('s3')
         for root, dirs, files in os.walk(self.configuration.target_path):
             for f in files:
+                if f.startswith('.'):
+                    continue
                 if root == self.configuration.target_path:
                     name = f
                 else:
@@ -44,7 +46,11 @@ class Deployer(object):
                 if self.hashes.get(path, None) != hash:
                     print "Deploying object: " + name
                     data = open(path, 'rb')
-                    s3.Bucket(self.configuration.s3bucket).put_object(Key=name, Body=data, ContentType=mimetypes.guess_type(f)[0])
+                    try:
+                        content_type = mimetypes.guess_type(f)[0]
+                    except:
+                        content_type = 'binary/octetstream'
+                    s3.Bucket(self.configuration.s3bucket).put_object(Key=name, Body=data, ContentType=content_type)
                     data.close()
                     self.hashes[path] = hash
         hf = open(os.path.join(self.configuration.base_path, 'pyginator.hash'),'wb')
